@@ -16,7 +16,6 @@ Next.js solves these problems out of the box.
 
 ## ✅ Why use Next.js?
 
-## ✅ Why use Next.js?
 
 ### 1. File-Based Routing (No React Router needed)
 
@@ -52,4 +51,49 @@ Code splitting
 ## Installing Next.js
 
 npx create-next-app@latest
+
+## 🚀 App Router (Next.js)
+
+Next.js uses the **App Router** (`/app` folder) for routing.
+
+Each folder inside `app` automatically becomes a route.
+
+Example:
+app/
+├─ page.js → /
+├─ about/
+│ └─ page.js → /about
+
+
+### Key Points
+
+- Routing is folder-based
+- `page.js` is required to render a route
+- `layout.js` wraps pages and persists UI
+- Supports Server Components by default
+- Built-in SEO optimization
+
+---
+
+## 🔗 Link Component in Next.js
+
+Next.js provides its own `Link` component for navigation between pages.
+
+Instead of using normal anchor tags:
+
+```html
+<a href="/about">About</a>
+
+Next.js uses:
+import Link from "next/link";
+
+<Link href="/about">About</Link>
+
+Why use Link?
+
+1.Enables client-side navigation
+2.Prevents full page reload
+3.Keeps React state intact
+4.Automatically prefetches pages
+5.Makes navigation faster
 
