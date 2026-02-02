@@ -88,6 +88,7 @@ Next.js uses:
 import Link from "next/link";
 
 <Link href="/about">About</Link>
+```
 
 Why use Link?
 
@@ -96,4 +97,53 @@ Why use Link?
 3.Keeps React state intact
 4.Automatically prefetches pages
 5.Makes navigation faster
+
+## 📁 Route Groups (App Router)
+
+Next.js allows creating **Route Groups** using folders wrapped in parentheses.
+
+Example:
+app/
+└─ (auth)/
+└─ login/
+└─ page.js
+
+
+Even though `login` is inside `(auth)`, the URL becomes:
+
+/login
+
+
+The `(auth)` folder does **not** appear in the URL.
+
+---
+
+### ✅ What is a Route Group?
+
+A Route Group is a folder like:
+
+(auth)
+(dashboard)
+(user)
+
+
+These folders are used only for **organizing files and layouts**.  
+They are ignored when Next.js generates routes.
+
+In simple words:
+
+> Route Groups help structure your app without changing the URL.
+
+---
+
+### 🎯 Why Route Groups are useful
+
+- Keep large projects organized
+- Separate sections like auth, dashboard, admin, etc.
+- Apply different layouts to different parts of the app
+- Maintain clean URLs
+- Improve project readability as it grows
+
+
+
 
