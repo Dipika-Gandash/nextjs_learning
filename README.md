@@ -276,3 +276,95 @@ Example:
 Font name: Work Sans
 
 Import name: Work_Sans
+
+## Image Component in Next.js 
+Next.js provides a built-in Image component to handle images in an optimized way.
+
+Compared to a normal <img> tag, it:
+1.Automatically optimizes images
+2.Prevents layout shift
+3.Loads images faster
+4.Supports lazy loading by default
+
+```html
+import Image from "next/image";
+```
+
+### Basic Image usage
+```html
+<Image
+  src="/hero.jpg"
+  alt="Explore beautiful places in India"
+  width={1200}
+  height={600}
+/>
+```
+
+### Important:
+1.alt is required (accessibility + SEO)
+2.width & height define aspect ratio
+3.They do NOT fix the image size on screen
+
+## What is CSS Module
+
+CSS Modules scope styles to one component only.
+
+1.No class conflicts
+2.Safer
+3.More maintainable
+4.Default choice in Next.js
+
+File name rule:
+```html
+ComponentName.module.css
+```
+
+Example:
+```html
+Hero.module.css
+```
+
+### Using CSS Modules
+CSS file:
+``html
+/* Hero.module.css */
+
+.container {
+  padding: 40px;
+}
+
+.title {
+  font-size: 48px;
+  font-weight: bold;
+}
+```
+
+Component file:
+```html
+import styles from "./Hero.module.css";
+
+export default function Hero() {
+  return (
+    <div className={styles.container}>
+      <h1 className={styles.title}>Welcome</h1>
+    </div>
+  );
+}
+```
+
+### How CSS Modules work internally
+
+This:
+```html
+.title {
+  color: red;
+}
+```
+
+Becomes something like:
+```html
+.title__k3d92 {
+  color: red;
+}
+```
+
