@@ -152,9 +152,13 @@ Normally in websites, we load fonts like this:
 <link href="https://fonts.googleapis.com/..." />
 ```
 Problems:
+
 1.External request
+
 2.Slower load
+
 3.Layout shift (font loads late)
+
 4.SEO + performance issues
 
 Next.js fixes this.
@@ -168,7 +172,9 @@ import { Inter } from "next/font/google";
 Now:
 
 👉 Font is downloaded at build time
+
 👉 Hosted locally
+
 👉 Optimized automatically
 
 ### What does “self-hosting fonts” mean?
@@ -178,15 +184,20 @@ Normally (classic way):
 Your browser does this:
 
 👉 Your website loads
+
 👉 Browser asks Google: “give me Inter font”
+
 👉 Google sends font files
 
 So flow is:
 Your site → Google Fonts → Browser
 
 That means:
+
 1.extra network request
+
 2.depends on Google servers
+
 3.slower first load
 
 This is called NOT self-hosted.
@@ -196,12 +207,15 @@ Self-hosting = fonts live with YOUR app
 With Next.js:
 
 👉 Next.js downloads the font files ONCE (during build)
+
 👉 Stores them inside your project output
+
 👉 When users open your site, fonts come from YOUR server
 
 So now:
 
 Your site → Your server → Browser
+
 No Google involved at runtime.
 
 That’s self-hosted.
@@ -215,11 +229,17 @@ import { Inter } from "next/font/google";
 Next.js sees this during build.
 
 It automatically:
+
 1.Contacts Google Fonts (server side, not browser)
+
 2.Downloads the font files
+
 3.Saves them inside .next/ build folder
+
 4.Generates CSS classes
+
 5.Links fonts locally
+
 
 All before deployment.
 
@@ -256,9 +276,13 @@ Example: English uses the latin subset
 In Next.js, subsets is required so it knows which characters to download
 
 This helps:
+
 1.reduce font size
+
 2.improve performance
+
 3.avoid downloading unused characters
+
 
 Example:
 ```html
@@ -281,9 +305,13 @@ Import name: Work_Sans
 Next.js provides a built-in Image component to handle images in an optimized way.
 
 Compared to a normal <img> tag, it:
+
 1.Automatically optimizes images
+
 2.Prevents layout shift
+
 3.Loads images faster
+
 4.Supports lazy loading by default
 
 ```html
@@ -302,16 +330,22 @@ import Image from "next/image";
 
 ### Important:
 1.alt is required (accessibility + SEO)
+
 2.width & height define aspect ratio
+
 3.They do NOT fix the image size on screen
+
 
 ## What is CSS Module
 
 CSS Modules scope styles to one component only.
 
 1.No class conflicts
+
 2.Safer
+
 3.More maintainable
+
 4.Default choice in Next.js
 
 File name rule:
@@ -326,7 +360,7 @@ Hero.module.css
 
 ### Using CSS Modules
 CSS file:
-``html
+```html
 /* Hero.module.css */
 
 .container {
