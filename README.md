@@ -401,4 +401,277 @@ Becomes something like:
   color: red;
 }
 ```
+## Metadata and SEO in next.js
+### What is metadata?
+Metadata = information about your page
+
+It tells:
+
+Google what this page is about
+
+Users what they’ll see before clicking
+
+This is what you see on Google 👇
+
+```html
+Title (blue link)
+Description (grey text)
+URL
+```
+
+### Metadata in Next.js (App Router)
+
+In Next.js App Router, metadata is:
+
+Written in page.js or layout.js
+
+Exported as a metadata object
+
+Basic metadata :
+```html
+export const metadata = {
+  title: 'Explore India',
+  description: 'Explore India by discovering states, cities, culture, food, and famous travel destinations.',
+}
+```
+
+### Keywords (optional)
+Keywords = words or phrases people type in Google when they search for something.
+
+### What is Open Graph?
+Open Graph is metadata that tells social media platforms (WhatsApp, LinkedIn, Facebook, etc.):
+
+1. Title of your page
+
+2. Description
+
+3. Image to display
+
+4. Type of content
+
+Without OG, sharing your page may look ugly or blank.
+
+```html
+ openGraph: {
+    title: 'Explore India',
+    description: 'Discover Indian states, cities, culture, and travel destinations.',
+    url: 'https://www.urlll.com', // website URL
+    images: ['/og-image.png'],           // path to an image in public folder
+    type: 'website',                     // type of content
+  },
+```
+
+How it works
+
+When someone shares your page on WhatsApp or LinkedIn:
+
+1. title → bold text shown
+
+2. description → summary text shown
+
+3. image → thumbnail displayed
+
+4. url → link back to your site
+
+This makes your site look professional 😄
+
+### How to add Twitter metadata
+
+```html
+ twitter: {
+    card: 'summary_large_image',
+    title: 'Explore India',
+    description: 'Discover Indian states, cities, culture, and travel destinations.',
+    images: ['/twitter-image.png'], // can be same as OG image
+  },
+```
+
+### What is robots metadata?
+
+robots tells search engines:
+
+1. Should this page be indexed?
+
+2. Should links on this page be followed?
+
+Think of it as permissions for Google.
+
+What does index mean?
+
+a. index: true
+
+👉 Google is allowed to show this page on Google
+
+b. index: false
+
+👉 Google is NOT allowed to show this page on Google
+
+Example:
+
+Home page → you WANT people to find it → index: true
+
+Login page → useless in search → index: false
+
+What does follow mean?
+
+a. follow: true
+
+👉 Google can follow links on this page
+
+b. follow: false
+
+👉 Google should NOT follow links from this page
+
+How to add robots in Next.js metadata
+```html
+export const metadata = {
+  title: 'Explore India',
+  description: 'Discover Indian states, cities, culture, and travel destinations.',
+  keywords: ['travel India', 'Indian cities', 'tourism in India', 'places to visit in India'],
+
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+```
+
+Best practice
+
+1️⃣ Public pages (home, blogs, places, etc.)
+
+You don’t need to write robots at all.
+
+Why?
+Because Google already assumes:
+```html
+index = true
+follow = true
+```
+
+Private / useless pages (important case)
+
+You write robots ONLY when you want to block a page.
+
+Examples:
+
+/login
+
+/signup
+
+/admin
+
+/dashboard
+
+Example code:
+```html
+robots: {
+  index: false,
+  follow: false,
+}
+```
+
+### What is robots.txt?
+robots.txt is a site-level rule file for search engines.
+
+It tells Google:
+
+“Which parts of my website you are allowed to crawl
+and which parts you should stay away from.”
+
+It does NOT decide ranking.
+It only controls crawling.
+
+|| What robots.txt can do
+
+✅ Allow crawling
+
+❌ Block crawling
+
+❌ Stop bots from wasting crawl budget
+
+How robots.txt works 
+
+Basic example:
+```html
+User-agent: *
+Disallow:
+```
+
+Meaning:
+
+All bots (*)
+
+Can crawl everything
+
+|| Block a folder:
+```html
+User-agent: *
+Disallow: /admin/
+```
+
+Bots will not crawl:
+```html
+/admin/*
+```
+
+robots.txt vs robots metadata
+
+| robots.txt        | robots metadata       |
+| ----------------- | --------------------- |
+| Site-level        | Page-level            |
+| Controls crawling | Controls indexing     |
+| Blocks bots       | Blocks search results |
+| Public file       | Inside page metadata  |
+
+### Canonical URL
+Canonical URL tells Google:
+
+“This is the original / main version of this page.”
+
+Why this matters:
+Sometimes the same content can be reached via multiple URLs.
+```html
+/places
+/places?ref=home
+/places?utm=google
+```
+
+All show the same content.
+
+Without canonical:
+
+Google gets confused
+
+SEO power gets split 😵‍💫
+
+With canonical:
+
+Google knows which URL to rank ✅
+
+|| How to add canonical in Next.js metadata
+```html
+export const metadata = {
+  title: 'Explore India',
+  description: 'Discover Indian states, cities, culture, and travel destinations.',
+
+  alternates: {
+    canonical: '/',
+  },
+};
+```
+|| When canonical becomes important (real cases)
+
+1. Filters
+
+2. Query params
+
+3. Pagination
+
+4. Same content under different URLs
+
+**Very important rule**
+
+Only add canonical when duplicate URLs are possible.
+
 
