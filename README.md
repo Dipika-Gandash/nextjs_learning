@@ -144,6 +144,135 @@ In simple words:
 - Maintain clean URLs
 - Improve project readability as it grows
 
+---
 
+## Font Optimization
+Normally in websites, we load fonts like this:
+```html
+<link href="https://fonts.googleapis.com/..." />
+```
+Problems:
+1.External request
+2.Slower load
+3.Layout shift (font loads late)
+4.SEO + performance issues
 
+Next.js fixes this.
 
+So Next.js gives:
+
+```html
+import { Inter } from "next/font/google";
+```
+
+Now:
+
+👉 Font is downloaded at build time
+👉 Hosted locally
+👉 Optimized automatically
+
+### What does “self-hosting fonts” mean?
+
+Normally (classic way):
+
+Your browser does this:
+
+👉 Your website loads
+👉 Browser asks Google: “give me Inter font”
+👉 Google sends font files
+
+So flow is:
+Your site → Google Fonts → Browser
+
+That means:
+1.extra network request
+2.depends on Google servers
+3.slower first load
+
+This is called NOT self-hosted.
+
+Self-hosting = fonts live with YOUR app
+
+With Next.js:
+
+👉 Next.js downloads the font files ONCE (during build)
+👉 Stores them inside your project output
+👉 When users open your site, fonts come from YOUR server
+
+So now:
+
+Your site → Your server → Browser
+No Google involved at runtime.
+
+That’s self-hosted.
+
+### How exactly does Next.js download fonts?
+When you write:
+```html
+import { Inter } from "next/font/google";
+```
+
+Next.js sees this during build.
+
+It automatically:
+1.Contacts Google Fonts (server side, not browser)
+2.Downloads the font files
+3.Saves them inside .next/ build folder
+4.Generates CSS classes
+5.Links fonts locally
+
+All before deployment.
+
+When you write:
+```html
+import { Inter } from "next/font/google";
+```
+**Inter** is just a function
+Like:
+```html
+function Inter() {
+  return something;
+}
+```
+
+Now when you call it:
+```html
+Inter({ subsets: ["latin"] })
+```
+
+It RETURNS something.
+
+It does NOT directly apply font.
+
+It RETURNS DATA.
+That data is an object.
+
+### Font subsets (Next.js)
+
+Fonts support multiple languages / character sets, called subsets
+
+Example: English uses the latin subset
+
+In Next.js, subsets is required so it knows which characters to download
+
+This helps:
+1.reduce font size
+2.improve performance
+3.avoid downloading unused characters
+
+Example:
+```html
+const inter = Inter({
+  subsets: ["latin"],
+});
+```
+
+### Font names with spaces (important)
+
+If a font name has spaces, Next.js uses underscores in the import.
+
+Example:
+
+Font name: Work Sans
+
+Import name: Work_Sans
