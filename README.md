@@ -674,4 +674,38 @@ export const metadata = {
 
 Only add canonical when duplicate URLs are possible.
 
+### Always put metadata in server components
+
+## Client Component
+A Client Component is a React component that runs in the browser. 
+
+Key point: Client Components are interactive — they handle user input, state changes, side effects, and anything that needs to happen on the user's device.
+
+### How Client Components Work
+
+When you write a Client Component:
+
+1. React sends JavaScript to the browser.
+
+2. The browser executes the code.
+
+3. The component renders HTML dynamically in the browser.
+
+4. Any interaction (like clicking a button or typing in a form) updates the component state and re-renders it locally, without needing the server.
+
+So essentially, the browser does all the heavy lifting for Client Components.
+
+### When to Use Client Components
+
+You need a Client Component whenever:
+
+1. You need state (useState)
+
+2. You need side effects (useEffect)
+
+3. You want event handling (clicks, form inputs, hover, drag, etc.)
+
+4. You need browser-only APIs, like window, localStorage, navigator, document
+
+**To make a component a Client Component, you must add 'use client' at the top of the file.**
 

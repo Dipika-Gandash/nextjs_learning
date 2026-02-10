@@ -2,7 +2,8 @@ import React from "react";
 import { playfair } from "../layout";
 import Image from "next/image";
 
-const homePage = () => {
+const homePage =  () => {
+  
   return (
     <div className="relative h-150 pt-28">
       <Image
