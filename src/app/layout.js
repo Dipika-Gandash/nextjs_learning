@@ -1,6 +1,11 @@
 import "./globals.css";
+import {
+  InterFont,
+  JetBrainsMonoFont,
+  NotoSerifFont,
+  EBGaramondFont,
+} from "./font.js";
 import Header from "@/components/Header";
-import { Playfair_Display, Inter } from "next/font/google";
 
 export const metadata = {
   metadataBase: new URL('http://localhost:3000'),
@@ -44,25 +49,18 @@ export const metadata = {
   },
 };
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font--playfair",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font--inter",
-});
-
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en"   className={`
+        ${InterFont.variable} 
+        ${JetBrainsMonoFont.variable} 
+        ${NotoSerifFont.variable} 
+        ${EBGaramondFont.variable}
+      `}>
+      <body>
         <Header />
         {children}
       </body>
     </html>
   );
 }
-
-export { playfair };

@@ -1,18 +1,16 @@
 import React from "react";
-import { playfair } from "../layout";
-import Image from "next/image";
 
 const homePage =  () => {
   
   return (
     <div className="relative h-150 pt-28">
-      <Image
+      {/* <Image
         src="/hero1.jpg"
         alt="Explore beautiful places in india"
         fill={true}
         priority
         className="object-cover"
-      />
+      /> */}
 
       <div className="absolute inset-y-0 left-0 w-[60%] bg-linear-to-r from-black/70 to-transparent z-10" />
 
