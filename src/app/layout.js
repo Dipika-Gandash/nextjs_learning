@@ -18,6 +18,10 @@ export const metadata = {
     "Indian cities",
     "travel guide",
   ],
+  icons:{
+    icon: "/favicon.png",
+    optional: "/favicon.png"
+  },
   openGraph: {
     title: "Explore India",
     description:
