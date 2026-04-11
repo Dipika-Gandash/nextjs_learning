@@ -52,7 +52,7 @@ const HeroSection = () => {
 
         <div className="flex md:hidden w-full gap-3">
           <div className="relative flex-1 h-50 rounded-2xl overflow-hidden shadow-lg">
-            <Image src="/Hero1.jpg" alt="Himalayas" fill className="object-cover" />
+            <Image src="/Hero1.jpg" alt="Himalayas" sizes="(max-width: 768px) 50vw, 25vw" fill className="object-cover" />
             <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/70 to-transparent p-2">
               <p className="text-white text-xs font-semibold tracking-wide">Himalayas</p>
             </div>
@@ -60,13 +60,13 @@ const HeroSection = () => {
 
           <div className="flex flex-col gap-3 flex-1">
             <div className="relative h-[94px] rounded-2xl overflow-hidden shadow-lg">
-              <Image src="/Hero2.jpg" alt="Taj Mahal" fill className="object-cover" />
+              <Image src="/Hero2.jpg" alt="Taj Mahal" fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
               <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/70 to-transparent p-2">
                 <p className="text-white text-xs font-semibold tracking-wide">Taj Mahal</p>
               </div>
             </div>
             <div className="relative h-[94px] rounded-2xl overflow-hidden shadow-lg">
-              <Image src="/Hero3.jpg" alt="Kerala" fill className="object-cover" />
+              <Image src="/Hero3.jpg" alt="Kerala" fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
               <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/70 to-transparent p-2">
                 <p className="text-white text-xs font-semibold tracking-wide">Kerala</p>
               </div>
@@ -77,21 +77,21 @@ const HeroSection = () => {
         <div className="hidden md:flex flex-1 items-center justify-center relative h-130 w-full">
 
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-50 h-77.5 rounded-2xl overflow-hidden shadow-2xl z-20 border-4 border-[#f5f0e8]">
-            <Image src="/Hero1.jpg" alt="Himalayas" fill className="object-cover" />
+            <Image src="/Hero1.jpg" alt="Himalayas" sizes="(max-width: 768px) 50vw, 25vw" fill className="object-cover" />
             <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/70 to-transparent p-3">
               <p className="text-white text-xs font-semibold tracking-wide">Himalayas</p>
             </div>
           </div>
 
           <div className="absolute right-0 top-0 w-55 h-61 rounded-2xl overflow-hidden shadow-xl z-10 border-4 border-[#f5f0e8]">
-            <Image src="/Hero2.jpg" alt="Taj Mahal" fill className="object-cover" />
+            <Image src="/Hero2.jpg" alt="Taj Mahal" fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
             <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/70 to-transparent p-3">
               <p className="text-white text-xs font-semibold tracking-wide">Taj Mahal</p>
             </div>
           </div>
 
           <div className="absolute right-0 bottom-0 w-55 h-61 rounded-2xl overflow-hidden shadow-xl z-10 border-4 border-[#f5f0e8]">
-            <Image src="/Hero3.jpg" alt="Golden Temple" fill className="object-cover" />
+            <Image src="/Hero3.jpg" alt="Golden Temple" fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
             <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/70 to-transparent p-3">
               <p className="text-white text-xs font-semibold tracking-wide">Golden Temple</p>
             </div>

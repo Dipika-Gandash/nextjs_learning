@@ -9,27 +9,27 @@ const categoryColors = {
   City: "bg-purple-100 text-purple-800",
 };
 
-const PlaceCard = ({ place }) => {
+const PlaceCard = ({ place: placeData }) => {
   const {
     name,
-    slug,
+    place,
     image,
     location,
     category,
     description,
     duration,
     bestTimeToVisit,
-  } = place;
+  } = placeData;
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col">
-      
       <div className="relative h-55 w-full overflow-hidden">
         <Image
           src={image}
           alt={name}
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+  className="object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <span
           className={`absolute top-3 left-3 text-xs font-semibold px-3 py-1 rounded-full ${categoryColors[category] || "bg-gray-100 text-gray-800"}`}
@@ -62,7 +62,7 @@ const PlaceCard = ({ place }) => {
         </div>
 
         <Link
-          href={`/destinations/${slug}`}
+          href={`/destinations/${place}`}
           className="mt-1 inline-flex items-center justify-center gap-2 border border-gray-900 text-gray-900 text-xs uppercase tracking-widest font-semibold px-5 py-2.5 hover:bg-gray-900 hover:text-white transition-all duration-300 group/btn"
         >
           Explore Now

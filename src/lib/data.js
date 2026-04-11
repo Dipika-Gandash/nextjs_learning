@@ -2,7 +2,7 @@ export const places = [
   {
     id: 1,
     name: "Kashmir",
-    slug: "kashmir",
+    place: "kashmir",
     image: "/places/KASHMIR.jpg",
     location: "Jammu & Kashmir, North India",
     category: "Nature",
@@ -24,7 +24,7 @@ export const places = [
   {
     id: 2,
     name: "Jaipur",
-    slug: "jaipur",
+    place: "jaipur",
     image: "/places/JAIPUR.jpg",
     location: "Rajasthan, North India",
     category: "Culture",
@@ -46,7 +46,7 @@ export const places = [
   {
     id: 3,
     name: "Manali",
-    slug: "manali",
+    place: "manali",
     image: "/places/MANALI.jpg",
     location: "Himachal Pradesh, North India",
     category: "Nature",
@@ -68,7 +68,7 @@ export const places = [
   {
     id: 4,
     name: "Coorg",
-    slug: "coorg",
+    place: "coorg",
     image: "/places/COORG.jpg",
     location: "Karnataka, South India",
     category: "Nature",
@@ -90,7 +90,7 @@ export const places = [
   {
     id: 5,
     name: "Amritsar",
-    slug: "amritsar",
+    place: "amritsar",
     image: "/places/AMRITSAR.jpg",
     location: "Punjab, North India",
     category: "Culture",
@@ -112,7 +112,7 @@ export const places = [
   {
     id: 6,
     name: "Mumbai",
-    slug: "mumbai",
+    place: "mumbai",
     image: "/places/MUMBAI.jpg",
     location: "Maharashtra, West India",
     category: "City",
@@ -134,7 +134,7 @@ export const places = [
   {
     id: 7,
     name: "Goa",
-    slug: "goa",
+    place: "goa",
     image: "/places/GOA.jpg",
     location: "Goa, West India",
     category: "Beach",
@@ -156,7 +156,7 @@ export const places = [
   {
     id: 8,
     name: "Lakshadweep",
-    slug: "lakshadweep",
+    place: "lakshadweep",
     image: "/places/LAKSHADWEEP-ISLANDS.jpg",
     location: "Lakshadweep, Arabian Sea",
     category: "Beach",
@@ -178,7 +178,7 @@ export const places = [
   {
     id: 9,
     name: "Udaipur",
-    slug: "udaipur",
+    place: "udaipur",
     image: "/places/UDAIPUR.jpg",
     location: "Rajasthan, North India",
     category: "Culture",
@@ -199,8 +199,8 @@ export const places = [
   },
 ];
 
-export const getPlaceBySlug = (slug) => {
-  return places.find((place) => place.slug === slug) || null;
+export const getPlaceBySlug = (place) => {
+  return places.find((p) => p.place === place) || null;
 };
 
 export const getPlacesByCategory = (category) => {

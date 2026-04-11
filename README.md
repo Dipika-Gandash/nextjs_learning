@@ -724,3 +724,435 @@ export default function Counter() {
   );
 }
 ```
+
+## 🖥️ Server Components
+
+A Server Component is a React component that **runs on the server** (never sent to the browser).
+
+### How Server Components Work
+
+1. React renders the component on the server
+2. The server fetches data directly (DB, APIs, filesystem)
+3. The server sends finished HTML to the browser
+4. No JavaScript is shipped to the client for this component
+
+### When to Use Server Components
+
+Server Components are the **default** in Next.js App Router. Use them when you need:
+
+1. Data fetching → databases, REST APIs, GraphQL
+2. Access to server-only resources → env variables, secrets, filesystem
+3. Heavy dependencies → libraries that shouldn't bloat the client bundle
+4. SEO-critical content → fully rendered HTML on first load
+
+**Server Components have no special directive — they are the default:**
+
+```jsx
+import { db } from "@/lib/db";
+
+export default async function UserList() {
+  const users = await db.query("SELECT * FROM users");
+
+  return (
+    <ul>
+      {users.map((user) => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## 🔀 Dynamic Segments
+
+### 🔹 1. What are Dynamic Segments?
+
+Dynamic segments are parts of a route that **change based on the URL**.
+
+Instead of creating a separate file for every route:
+
+```
+/blog/post1
+/blog/post2
+/blog/post3
+```
+
+You define **one dynamic route**:
+
+```
+/blog/[slug]
+```
+
+Here, `[slug]` is a dynamic segment — it captures whatever value is in that position of the URL.
+
+---
+
+### 🔹 2. Folder Structure (App Router)
+
+```
+app/
+  blog/
+    [slug]/
+      page.js       ← handles /blog/anything
+```
+
+```
+app/
+  shop/
+    [category]/
+      [productId]/
+        page.js     ← handles /shop/electronics/123
+```
+
+---
+
+### 🔹 3. How the Page Receives the Segment → `params`
+
+In the App Router, dynamic segments are passed as **`params`** prop automatically.
+
+```jsx
+// app/blog/[slug]/page.js
+
+export default async function BlogPost({ params }) {
+  const { slug } = await params;   // slug = whatever is in the URL
+
+  return <h1>Post: {slug}</h1>;
+}
+```
+
+> ⚠️ In Next.js 15+, `params` is a **Promise** — always `await` it.
+
+---
+
+### 🔹 4. Rendering Strategies — Build Time vs Request Time
+
+When you don't know exact segment names ahead of time and want to create routes from dynamic data, Next.js gives you two strategies:
+
+---
+
+#### ⚡ Static Rendering (Build Time)
+
+> Pages are generated **once at build time** and served as static HTML. Super fast.
+
+```
+Developer runs → npm run build
+                      ↓
+         Next.js fetches data at build
+                      ↓
+         Generates HTML for each page
+                      ↓
+         Saves static files to server
+                      ↓
+  User visits → gets pre-built HTML instantly
+```
+
+To statically pre-render dynamic routes, export `generateStaticParams`:
+
+```jsx
+// app/blog/[slug]/page.js
+
+export async function generateStaticParams() {
+  const posts = await fetch('/api/posts').then(r => r.json());
+
+  return posts.map((post) => ({
+    slug: post.slug,   // generates /blog/post-1, /blog/post-2 ...
+  }));
+}
+
+export default async function BlogPost({ params }) {
+  const { slug } = await params;
+  const post = await fetch(`/api/posts/${slug}`).then(r => r.json());
+
+  return <h1>{post.title}</h1>;
+}
+```
+
+**✅ Use Static when:**
+- Content doesn't change often (blog posts, docs, product pages)
+- You want maximum performance
+- Data is known at build time
+
+---
+
+#### 🔄 Dynamic Rendering (Request Time)
+
+> Page is generated **on every request** — fresh data every time.
+
+```
+User visits /blog/my-post
+      ↓
+Request sent to server
+      ↓
+Server runs your component code
+      ↓
+Fetches fresh data (DB, API, etc.)
+      ↓
+Generates HTML on the fly
+      ↓
+Sends HTML → Browser paints
+```
+
+Next.js automatically switches to dynamic rendering when it detects:
+- `cookies()` or `headers()` usage
+- `searchParams` access
+- `fetch()` with `cache: 'no-store'`
+
+Or you can force it manually:
+
+```jsx
+export const dynamic = 'force-dynamic';
+
+export default async function BlogPost({ params }) {
+  const { slug } = await params;
+  const post = await fetch(`/api/posts/${slug}`, {
+    cache: 'no-store'   // fresh data on every request
+  }).then(r => r.json());
+
+  return <h1>{post.title}</h1>;
+}
+```
+
+**✅ Use Dynamic when:**
+- Data changes frequently (dashboards, feeds, stock prices)
+- Content is user-specific (profiles, orders)
+- You need real-time accuracy
+
+---
+
+#### 📊 Quick Comparison
+
+| | Static (Build Time) | Dynamic (Request Time) |
+|---|---|---|
+| When rendered | `npm run build` | Every request |
+| Speed | ⚡ Fastest | 🐢 Slower |
+| Data freshness | Stale until rebuild | Always fresh |
+| Use `generateStaticParams` | Yes | No |
+| Good for | Blogs, docs, marketing | Dashboards, user pages |
+
+---
+
+### 🔹 5. Catch-All Segments
+
+Capture **multiple segments** in one route using `[...slug]`:
+
+```
+app/
+  docs/
+    [...slug]/
+      page.js
+```
+
+```jsx
+// URL: /docs/guide/setup/windows
+// params.slug = ['guide', 'setup', 'windows']
+
+export default async function DocsPage({ params }) {
+  const { slug } = await params;
+  // slug is an array: ['guide', 'setup', 'windows']
+}
+```
+
+Use **optional catch-all** `[[...slug]]` to also match the root `/docs`:
+
+```
+[[...slug]] → matches /docs AND /docs/anything/deep
+```
+
+---
+
+### 🔹 6. Accessing `params` in Server Components
+
+In Server Components, Next.js automatically passes `params` as a **prop** to your page.
+
+```jsx
+// app/blog/[slug]/page.js
+// URL: /blog/my-first-post
+
+export default async function BlogPost({ params }) {
+  const { slug } = await params;
+  // slug = 'my-first-post'  ← string
+
+  const post = await fetch(`/api/posts/${slug}`).then(r => r.json());
+
+  return <h1>{post.title}</h1>;
+}
+```
+
+For **nested dynamic segments**:
+
+```jsx
+// app/shop/[category]/[productId]/page.js
+// URL: /shop/electronics/42
+
+export default async function ProductPage({ params }) {
+  const { category, productId } = await params;
+  // category = 'electronics', productId = '42'
+}
+```
+
+> ✅ `params` only works as a prop in **page.js**, **layout.js**, and **generateStaticParams**.  
+> ✅ Always `await params` in Next.js 15+ — it's a Promise.  
+> ❌ Cannot use `params` prop directly inside a nested child component — pass it down as a regular prop or use `useParams()` in a Client Component.
+
+---
+
+### 🔹 7. Accessing `params` in Client Components
+
+You have **two ways** to get dynamic segment values in a Client Component:
+
+---
+
+#### Option A → `useParams()` hook (recommended)
+
+```jsx
+'use client';
+
+import { useParams } from 'next/navigation';
+
+export default function BlogPost() {
+  const params = useParams();
+  const { slug } = params;
+  // slug = 'my-first-post'
+
+  return <h1>{slug}</h1>;
+}
+```
+
+> ✅ Works anywhere in the component tree — no need to pass props down.  
+> ✅ Automatically updates if the URL changes (navigation).
+
+---
+
+#### Option B → Pass `params` down from Server Component as a prop
+
+```jsx
+// app/blog/[slug]/page.js  (Server Component)
+import BlogPost from '@/components/BlogPost';
+
+export default async function Page({ params }) {
+  const { slug } = await params;
+  return <BlogPost slug={slug} />;   // pass as regular prop
+}
+```
+
+```jsx
+// components/BlogPost.jsx  (Client Component)
+'use client';
+
+export default function BlogPost({ slug }) {
+  // slug = 'my-first-post' — received as a normal prop
+  return <h1>{slug}</h1>;
+}
+```
+
+> ✅ Useful when the parent already has `params` and the child just needs one value.  
+> ✅ No extra hook needed.
+
+---
+
+### 🔹 8. Reading Search Params (Query Strings)
+
+**Search params** are the `?key=value` part of the URL — e.g., `/blog?page=2&sort=latest`.
+
+They are **not** part of the file/folder structure. They are optional and can be anything.
+
+```
+/blog?page=2&sort=latest
+        ↑         ↑
+   searchParam  searchParam
+```
+
+---
+
+#### In Server Components → `searchParams` prop
+
+Next.js passes search params as a **prop** automatically, just like `params`.
+
+```jsx
+// app/blog/page.js
+// URL: /blog?page=2&sort=latest
+
+export default async function BlogPage({ searchParams }) {
+  const { page, sort } = await searchParams;
+  // page = '2'   ← always a string, never a number
+  // sort = 'latest'
+
+  const posts = await fetch(`/api/posts?page=${page}&sort=${sort}`)
+    .then(r => r.json());
+
+  return <p>Showing page {page}</p>;
+}
+```
+
+> ⚠️ Values are always **strings** — convert with `Number(page)` or `parseInt(page)` when needed.  
+> ⚠️ Accessing `searchParams` **automatically opts the page into dynamic rendering** (every request). Next.js cannot statically pre-render a page when its output depends on query strings.  
+> ❌ `searchParams` prop is only available in `page.js` — not in layouts.
+
+---
+
+#### In Client Components → `useSearchParams()` hook
+
+```jsx
+'use client';
+
+import { useSearchParams } from 'next/navigation';
+
+export default function Filters() {
+  const searchParams = useSearchParams();
+
+  const page = searchParams.get('page');     // '2' or null if missing
+  const sort = searchParams.get('sort');     // 'latest' or null
+
+  return <p>Page {page}, sorted by {sort}</p>;
+}
+```
+
+**Useful `useSearchParams` methods:**
+
+```jsx
+searchParams.get('page')        // → '2'           single value
+searchParams.get('missing')     // → null           if key doesn't exist
+searchParams.getAll('tag')      // → ['js', 'css']  for ?tag=js&tag=css
+searchParams.has('sort')        // → true/false      check if key exists
+searchParams.toString()         // → 'page=2&sort=latest'
+```
+
+> ✅ Reactive — component **re-renders automatically** when the URL query string changes.  
+> ✅ Works anywhere in the client component tree (no prop drilling needed).
+
+---
+
+### 🔹 9. How Re-rendering Works (Important)
+
+This is where Server and Client Components behave very differently:
+
+**Server Component with `searchParams`:**
+```
+User changes URL → full server round trip → server re-runs the component
+→ fetches fresh data → sends new HTML → browser updates
+```
+
+**Client Component with `useSearchParams()`:**
+```
+User changes URL → no server trip → hook detects URL change
+→ React re-renders the component in the browser → UI updates instantly
+```
+
+This is why `useSearchParams()` feels instant — it's pure client-side reactivity.  
+But it means the data it uses must already be in the browser (no direct DB access).
+
+---
+
+### 🔹 10. When to Use What — Full Reference
+
+| What you need | Component Type | How to access |
+|---|---|---|
+| Dynamic segment (`[slug]`) | Server Component | `params` prop → `await params` |
+| Dynamic segment (`[slug]`) | Client Component | `useParams()` hook |
+| Dynamic segment (`[slug]`) | Client Component (via parent) | pass as prop from Server Component |
+| Search param (`?key=val`) | Server Component | `searchParams` prop → `await searchParams` |
+| Search param (`?key=val`) | Client Component | `useSearchParams()` hook |
+| Pre-render dynamic routes | Server Component | `generateStaticParams` |
+| Force fresh data per request | Server Component | `cache: 'no-store'` or `dynamic = 'force-dynamic'` |
+
+> 💡 **Rule of thumb:** prefer Server Components for data fetching. Drop to Client Components only when you need interactivity, hooks, or reactive URL changes.
