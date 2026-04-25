@@ -59,13 +59,13 @@ const HeroSection = () => {
           </div>
 
           <div className="flex flex-col gap-3 flex-1">
-            <div className="relative h-[94px] rounded-2xl overflow-hidden shadow-lg">
+            <div className="relative h-23.5 rounded-2xl overflow-hidden shadow-lg">
               <Image src="/Hero2.jpg" alt="Taj Mahal" fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
               <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/70 to-transparent p-2">
                 <p className="text-white text-xs font-semibold tracking-wide">Taj Mahal</p>
               </div>
             </div>
-            <div className="relative h-[94px] rounded-2xl overflow-hidden shadow-lg">
+            <div className="relative h-23.5 rounded-2xl overflow-hidden shadow-lg">
               <Image src="/Hero3.jpg" alt="Kerala" fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
               <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/70 to-transparent p-2">
                 <p className="text-white text-xs font-semibold tracking-wide">Kerala</p>

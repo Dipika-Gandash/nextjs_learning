@@ -1156,3 +1156,597 @@ But it means the data it uses must already be in the browser (no direct DB acces
 | Force fresh data per request | Server Component | `cache: 'no-store'` or `dynamic = 'force-dynamic'` |
 
 > 💡 **Rule of thumb:** prefer Server Components for data fetching. Drop to Client Components only when you need interactivity, hooks, or reactive URL changes.
+
+## Fetching Data in Next.js
+
+### 🟢 Server Component — Fetching Data
+
+Server components run **only on the server** — they never ship to the browser.
+
+**What you can do:**
+- Directly query a database (Prisma, Drizzle, raw SQL)
+- Read secret env vars like `process.env.DB_SECRET`
+- Call internal APIs not exposed to users
+- Use `async/await` at the component level — no `useEffect` needed
+
+```tsx
+// app/users/page.tsx — Server Component (no "use client")
+
+async function UsersPage() {
+  const users = await db.user.findMany() // direct DB call ✓
+
+  return (
+    <ul>
+      {users.map(u => <li key={u.id}>{u.name}</li>)}
+    </ul>
+  )
+}
+
+export default UsersPage
+```
+
+**How it flows:**
+```
+Request hits server → Component runs → DB query fires → HTML rendered → Sent to browser
+```
+
+> No loading state, no `useEffect`, no API route needed.  
+> Data is fetched **before** the HTML even leaves the server.
+
+**`fetch()` caching options in Server Components:**
+
+```ts
+// cached indefinitely (like getStaticProps)
+fetch('https://api.example.com/data', { cache: 'force-cache' })
+
+// never cached (like getServerSideProps)
+fetch('https://api.example.com/data', { cache: 'no-store' })
+
+// revalidate every 60 seconds (ISR-style)
+fetch('https://api.example.com/data', { next: { revalidate: 60 } })
+```
+
+---
+
+### 🔵 Client Component — Fetching Data
+
+Client components run in the browser. No DB access, no secrets, no file system.  
+Data must come through an API route.
+
+**Plain `fetch` approach:**
+
+```tsx
+'use client'
+import { useEffect, useState } from 'react'
+
+export default function UserList() {
+  const [users, setUsers] = useState([])
+
+  useEffect(() => {
+    fetch('/api/users')
+      .then(res => res.json())
+      .then(data => setUsers(data))
+  }, [])
+
+  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>
+}
+```
+
+**SWR approach (recommended):**
+
+```tsx
+'use client'
+import useSWR from 'swr'
+
+const fetcher = (url) => fetch(url).then(r => r.json())
+
+export default function UserList() {
+  const { data: users, isLoading } = useSWR('/api/users', fetcher)
+
+  if (isLoading) return <p>Loading...</p>
+  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>
+}
+```
+
+**How it flows:**
+```
+Component mounts → useEffect fires → fetch('/api/...') → state updated → re-render
+```
+
+> This is why client fetching shows a loading state — the component renders **first** with empty data,  
+> then refetches and re-renders when the data arrives.
+
+---
+
+### 🔹 Side-by-Side Comparison
+
+| | Server Component | Client Component |
+|---|---|---|
+| How to fetch | `async/await` directly | `useEffect` or SWR/React Query |
+| DB access | ✅ Yes | ❌ No (API route only) |
+| Secret env vars | ✅ Yes | ❌ No |
+| Loading state needed | ❌ No | ✅ Yes |
+| Interactive / real-time | ❌ No | ✅ Yes |
+| Data fetched | Before HTML is sent | After component mounts |
+
+---
+
+---
+
+###  Why Can't We Use `async/await` Directly in Client Components?
+
+Short answer — **React does not support async Client Components.**
+
+If you try this:
+
+```tsx
+'use client'
+
+export default async function UserList() {
+  const users = await fetch('/api/users').then(r => r.json()) // ❌ won't work
+  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>
+}
+```
+
+You'll get an error. Here's why.
+
+---
+
+**Reason 1 — Client Components are tied to the browser render cycle**
+
+React renders client components **synchronously** on the browser. The moment React calls your component function, it expects it to return JSX immediately. An `async` function returns a **Promise**, not JSX — React doesn't know what to do with that and breaks.
+
+```
+React calls YourComponent()
+  → async function returns Promise<JSX>   ← React expected JSX, got a Promise ❌
+```
+
+---
+
+**Reason 2 — Hooks don't work inside async functions**
+
+Client components use hooks like `useState`, `useEffect`, `useContext`. React tracks hooks by the **order they are called** on each render. Inside an async function, execution can pause at every `await` — React loses track of the hook order and throws errors.
+
+```tsx
+'use client'
+
+async function BadComponent() {
+  const data = await fetch('/api/data') // ⏸ pauses here
+  const [count, setCount] = useState(0) // ❌ React hook order is now broken
+}
+```
+
+---
+
+**Reason 3 — The browser has no idea when the Promise resolves**
+
+On the server, Next.js can `await` the component before sending HTML — it controls the timing. In the browser, React is managing a live UI with state, events, and re-renders happening constantly. There's no safe moment to "pause everything and wait" for an async component to resolve.
+
+---
+
+**So what do you do instead?**
+
+You separate the async work from the render using `useEffect`:
+
+```tsx
+'use client'
+import { useEffect, useState } from 'react'
+
+export default function UserList() {
+  const [users, setUsers] = useState([])    // 1. start with empty state
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {                          // 2. after render, fetch data
+    async function load() {
+      const res = await fetch('/api/users')
+      const data = await res.json()
+      setUsers(data)                         // 3. update state → re-render
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  if (loading) return <p>Loading...</p>     // 4. show loading until ready
+  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>
+}
+```
+
+> `async/await` lives **inside** `useEffect`, not on the component itself.  
+> The component function stays synchronous — React is happy. ✅
+
+---
+
+**The mental model:**
+
+```
+Server Component          Client Component
+──────────────────        ──────────────────────────────────────
+async function ✅         async function ❌
+await db.query()          useEffect → async function inside → await fetch()
+returns JSX               returns JSX immediately, fills in data later
+```
+
+---
+
+> **One line summary:**  
+> Server components run once and wait. Client components render first, then fetch — because React needs JSX *now*, not after a Promise resolves.
+
+## ⏳ Auto Loading in Next.js (`loading.js`)
+
+Next.js uses a special file convention to show loading UI **automatically** while a route segment is streaming in. It wraps your page in a [`<Suspense>`](https://react.dev/reference/react/Suspense) boundary behind the scenes — you don't write any Suspense code yourself.
+
+---
+
+### How it works
+
+```
+app/
+├── loading.js          ← applies to every route (global fallback)
+├── page.js
+└── blog/
+    ├── loading.js      ← applies only to /blog (overrides app-level)
+    └── page.js
+```
+
+**File placement = scope.** Drop `loading.js` at any level of the `app/` folder and it automatically wraps that route segment and all its children.
+
+---
+
+### Mental model
+
+```
+app/loading.js            →   every route in the app
+app/blog/loading.js       →   /blog and its sub-routes only
+app/blog/[slug]/loading.js →  /blog/:slug only
+```
+
+More specific files **override** the parent. If `/blog` has its own `loading.js`, the app-level one won't show for that route.
+
+---
+
+### Minimal example
+
+```tsx
+// app/blog/loading.js
+export default function Loading() {
+  return <div>Loading blog...</div>
+}
+```
+
+That's it. Next.js handles the rest.
+
+---
+
+### ⚠️ Does NOT apply to Client Components
+
+`loading.js` only works with **Server Components**. Client components render immediately (React needs JSX *now*, not after a promise), so the loading file is never shown.
+
+**For client components, use `<Suspense>` manually:**
+
+```tsx
+// app/blog/page.js  ('use client')
+import { Suspense } from 'react'
+import Comments from './Comments'
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading comments...</div>}>
+      <Comments />
+    </Suspense>
+  )
+}
+```
+
+---
+
+### ⚡ When loading won't show
+
+Even with `loading.js` set up correctly, the spinner may not appear if:
+
+- **Navigation is fast** — Next.js has a 300ms threshold; instant transitions skip the fallback entirely
+- **The result is cached** — cached pages render without re-fetching, so no loading state is triggered
+- **The component is a Client Component** — see above
+
+---
+
+### Quick reference
+
+| Scenario | Solution |
+|---|---|
+| Loading for all routes | `app/loading.js` |
+| Loading for one route | `app/[route]/loading.js` |
+| Loading inside a client component | `<Suspense fallback={…}>` |
+| Loading not showing (fast nav / cache) | Expected — no fix needed |
+
+# ⏸️ Suspense in Next.js
+
+> Show a fallback (spinner/skeleton) while waiting for slow content to load, then swap it in automatically.
+
+---
+
+## The Idea
+
+```tsx
+<Suspense fallback={<p>Loading...</p>}>
+  <SlowComponent />
+</Suspense>
+```
+
+- React renders `<p>Loading...</p>` immediately
+- When `SlowComponent` is ready → it replaces the fallback
+- Everything outside the boundary renders normally, no waiting
+
+---
+
+## How `loading.js` Relates
+
+`loading.js` is just Next.js doing this automatically for a whole route.
+
+```
+app/
+├── loading.js       ← same as wrapping your page in <Suspense>
+└── page.js
+```
+
+Use `loading.js` for full-page loading.  
+Use `<Suspense>` when you want only *part* of a page to show a skeleton.
+
+---
+
+## Granular Loading — The Real Power
+
+Instead of waiting for everything, show sections as they're ready.
+
+```tsx
+export default function Page() {
+  return (
+    <>
+      <Header />                              {/* shows instantly */}
+
+      <Suspense fallback={<UserSkeleton />}>
+        <UserProfile />                       {/* slow — shows skeleton */}
+      </Suspense>
+
+      <Suspense fallback={<FeedSkeleton />}>
+        <Feed />                              {/* medium — shows skeleton */}
+      </Suspense>
+    </>
+  )
+}
+```
+
+`Header` shows instantly. `Feed` appears when ready. `UserProfile` appears when ready.  
+They don't wait for each other.
+
+---
+
+## With Async Server Components
+
+If your component fetches data with `await`, wrap it in Suspense.
+
+```tsx
+async function UserProfile() {
+  const user = await db.users.find()  // slow db call
+  return <div>{user.name}</div>
+}
+
+// In your page:
+<Suspense fallback={<Skeleton />}>
+  <UserProfile />
+</Suspense>
+```
+
+That's it. Next.js streams the skeleton first, then swaps in the real content.
+
+---
+
+## With Client Components
+
+Client components can't be `async`. Use a library like SWR with `suspense: true`.
+
+```tsx
+'use client'
+import useSWR from 'swr'
+
+function UserProfile() {
+  const { data } = useSWR('/api/user', fetcher, { suspense: true })
+  return <div>{data.name}</div>
+}
+
+// Wrap it when you use it:
+<Suspense fallback={<Skeleton />}>
+  <UserProfile />
+</Suspense>
+```
+
+---
+
+## Always Pair With an Error Boundary
+
+Suspense handles **loading**. Error boundaries handle **something broke**.
+
+```tsx
+<ErrorBoundary fallback={<p>Something went wrong.</p>}>
+  <Suspense fallback={<Skeleton />}>
+    <UserProfile />
+  </Suspense>
+</ErrorBoundary>
+```
+
+In Next.js you get this for free with `error.js` next to your `loading.js`.
+
+---
+
+## Quick Reference
+
+| What you want | How |
+|---|---|
+| Loading UI for a whole route | `loading.js` |
+| Loading UI for part of a page | `<Suspense fallback={…}>` |
+| Multiple independent sections | Multiple `<Suspense>` boundaries |
+| Handle errors too | `error.js` or `<ErrorBoundary>` |
+
+---
+
+## Common Mistakes
+
+```tsx
+// ❌ wrapping everything in one boundary — entire page waits
+<Suspense fallback={<Spinner />}>
+  <Header />       {/* forced to wait even though it's instant */}
+  <UserProfile />
+  <Feed />
+</Suspense>
+
+// ✅ only wrap the slow parts
+<Header />
+<Suspense fallback={<Skeleton />}><UserProfile /></Suspense>
+<Suspense fallback={<Skeleton />}><Feed /></Suspense>
+```
+
+---
+
+## Connecting Next.js to MongoDB
+
+### Why it's different from a normal Node server
+
+In a regular Node/Express server, you connect to the database **once** when the server starts, and that connection stays alive forever.
+
+Next.js is different:
+
+- In **development**, Next.js hot-reloads your code on every file change. Each reload can re-run your connection file, creating **hundreds of duplicate connections** that choke your database.
+- In **production** (on Vercel/serverless), there is **no persistent server**. Each incoming request may spin up a fresh function instance — so you can't assume a connection already exists.
+
+> **The fix:** cache the connection on the `global` object in dev (it survives hot-reloads), and reuse an existing connection in prod if one is already open.
+
+---
+
+### Step 1 — Install the driver
+
+```bash
+npm install mongodb
+```
+
+---
+
+### Step 2 — Add your connection string
+
+Create a `.env.local` file in your project root (Next.js loads this automatically, and it is git-ignored by default):
+
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/<dbname>?retryWrites=true&w=majority
+```
+
+Replace `<username>`, `<password>`, and `<dbname>` with your actual MongoDB Atlas values.
+
+---
+
+### Step 3 — Create the connection helper
+
+```
+src/
+└── lib/
+    └── database.js
+```
+
+```js
+// src/lib/database.js
+
+import { MongoClient } from "mongodb";
+
+const URI = process.env.MONGODB_URI;
+
+if (!URI) {
+  throw new Error("MongoDB URI is not defined in the environment variables");
+}
+
+let clientPromise;
+
+if (!global.mongoClient) {
+  const client = new MongoClient(URI);   // create the client (not connected yet)
+  global.mongoClient = client.connect(); // connect() returns a Promise — store it
+}
+
+clientPromise = global.mongoClient; // point to the cached promise
+
+export default clientPromise;
+```
+
+#### What each line does
+
+**`new MongoClient(URI)`**
+Creates the client object using your connection string. At this point, no connection is open yet — it's just configuring *how* to connect.
+
+**`client.connect()`**
+This actually opens the connection to MongoDB. It returns a **Promise** — meaning the connection is happening in the background, not instantly.
+
+**`global.mongoClient = client.connect()`**
+We store that Promise on `global`, not the result of awaiting it. `global` is Node's true global object — unlike normal module variables, it survives Next.js hot-reloads in development. So the next time this file runs (on a code change), `global.mongoClient` already exists and we skip creating a new connection entirely.
+
+**Why don't we `await client.connect()` here?**
+Because this is module-level code — it runs once when the file is first imported, not inside an async function. You can't `await` at the top level in this context. Instead, we store the Promise itself, and whoever uses it does the awaiting:
+
+```js
+// in your route handler:
+const client = await clientPromise; // ← the await happens here
+const db = client.db("myDatabase");
+```
+
+**`clientPromise = global.mongoClient`**
+Just a local variable pointing to the same Promise. This is what gets exported — any file that imports this will receive the same shared Promise, meaning they all share the same single connection pool.
+
+> **The key insight:** we never store the *resolved connection* — we store the *Promise of a connection*. Every file that imports `clientPromise` and awaits it gets the same connection back. Promises in JavaScript remember their resolved value, so awaiting the same Promise 100 times doesn't reconnect 100 times — it just returns the cached result instantly after the first time.
+
+---
+
+### Step 4 — Use it in a Route Handler
+
+```js
+// app/api/users/route.js
+
+import clientPromise from "@/lib/database";
+
+export async function GET() {
+  const client = await clientPromise;        // wait for connection
+  const db = client.db("myDatabase");        // pick which DB to use
+  const users = await db
+    .collection("users")                     // pick which collection
+    .find({})
+    .toArray();
+
+  return Response.json(users);
+}
+```
+
+---
+
+### What each piece means
+
+| Term | What it is |
+|---|---|
+| `MongoClient` | The class from the `mongodb` package. Represents a connection pool to your cluster. |
+| `client.connect()` | Opens the connection. Returns a Promise, so we `await` it. |
+| `clientPromise` | The cached Promise — sharing this means we share one connection, not many. |
+| `global._mongoClientPromise` | Node's global object. Survives hot-reloads in dev so the connection isn't re-created. |
+| `client.db("name")` | Selects a specific database inside your cluster. |
+| `.collection("name")` | Selects a collection (like a table) inside that database. |
+
+---
+
+### Common Mistakes
+
+```js
+// ❌ Connecting inside a component or route without caching
+// This creates a new connection on EVERY request
+export async function GET() {
+  const client = new MongoClient(process.env.MONGODB_URI);
+  await client.connect(); // brand new connection every time
+}
+
+// ✅ Always import the shared clientPromise
+import clientPromise from "@/lib/database";
+
+export async function GET() {
+  const client = await clientPromise; // reuses existing connection
+}
+```
